@@ -1,0 +1,895 @@
+extern void object::coreExchange()
+{
+	Exchange x = new Exchange();
+	RobotName r = new RobotName("slave");
+
+	x.push(r, new FindTask(Titanium));
+	x.push(r, new GotoInterestingTask());
+	x.push(r, new MoveTask(-3));
+	x.push(r, new BuildTask(ResearchCenter));
+
+	x.push(r, new FindTask(Titanium));
+	x.push(r, new GotoInterestingTask());
+	x.push(r, new MoveTask(-3));
+	x.push(r, new BuildTask(BotFactory));
+
+	new Slave(r, this).run();
+}
+
+public class RobotName
+{
+	string name;
+	
+	void RobotName(string name)
+	{
+		this.name = name;
+	}
+	
+	public string getValue()
+	{
+		return this.name;
+	}
+	
+	public bool equals(RobotName r)
+	{
+		return this.name == r.name;
+	}
+}
+
+public class Robot
+{
+	RobotName name;
+	object robot;
+	point checkpoint;
+	object interesting;
+	bool hasInteresting = false;
+	
+	void Robot(RobotName name, object robot)
+	{
+		this.name = name;
+		this.robot = robot;
+		this.savePosition();
+	}
+	
+	public RobotName getRobotName()
+	{
+		return this.name;
+	}
+	
+	public bool equals(Robot r)
+	{
+		return this.name == r.name;
+	}
+	
+	public object getRobotIntance()
+	{
+		return this.robot;
+	}
+	
+	public void savePosition()
+	{
+		this.checkpoint = this.robot.position;
+	}
+	
+	public point getLastSavePosition()
+	{
+		return this.checkpoint;
+	}
+	
+	public void saveInteresting(object interesting)
+	{
+		this.hasInteresting = true;
+		this.interesting = interesting;
+	}
+	
+	public void clearInteresting()
+	{
+		this.hasInteresting = false;
+	}
+	
+	public bool hasInteresting()
+	{
+		return this.hasInteresting;
+	}
+	
+	public object getInteresting()
+	{
+		return this.interesting;
+	}
+}
+
+public class Slave
+{
+	Robot r;
+	Exchange e;
+	
+	public void Slave(RobotName robotName, object robot)
+	{
+		this.e = new Exchange();
+		this.r = new Robot(robotName, robot);
+	}
+	
+	public void run()
+	{
+		Task t;
+		
+		while(true) {
+			t = this.e.pull(this.r);
+			if (t.getName() == "EmptyTask"){
+				wait(1);
+				continue;
+			}
+			message(this.r.getRobotName().getValue() + " is doing: " + t.getName());
+			t.execute(this.r);
+		}
+	}
+}
+
+public class Task
+{
+	string name;
+	bool executed = false;
+	
+	void Task(string name)
+	{
+		this.name = name;
+	}
+	
+	public string getName()
+	{
+		return this.name;
+	}
+	
+	void executed()
+	{
+		this.executed = true;
+	}
+	
+	public bool isExecuted()
+	{
+		return this.executed;
+	}
+	
+	public void execute(Robot r)
+	{
+		message("Not implemented:" + this.name);
+	}
+	
+	public Task clone()
+	{
+		message("Not implmented clonning");
+		return new Task(this.name);
+	}
+}
+
+public class EmptyTask extends Task
+{
+	void EmptyTask()
+	{
+		super.Task("EmptyTask");
+	}
+}
+
+public class WaitTask extends Task
+{
+	float value;
+	
+	void WaitTask(float value)
+	{
+		super.Task("Wait");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		wait(this.value);
+		this.executed();
+	}
+	
+	public WaitTask clone()
+	{
+		return new WaitTask(this.value);
+	}
+}
+
+public class MoveTask extends Task
+{
+	float value;
+	
+	void MoveTask(float value)
+	{
+		super.Task("Move");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		move(this.value);
+		this.executed();
+	}
+	
+	public MoveTask clone()
+	{
+		return new MoveTask(this.value);
+	}
+}
+
+public class TurnTask extends Task
+{
+	float value = 0;
+	
+	void TurnTask(float value)
+	{
+		super.Task("Turn");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		turn(this.value);
+		this.executed();
+	}
+	
+	public TurnTask clone()
+	{
+		return new TurnTask(this.value);
+	}
+}
+
+public class AimTask extends Task
+{
+	float value = 0;
+	
+	void AimTask(float value)
+	{
+		super.Task("Aim");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		aim(this.value);
+		this.executed();
+	}
+	
+	public AimTask clone()
+	{
+		return new AimTask(this.value);
+	}
+}
+
+public class FireTask extends Task
+{
+	float value = 0;
+	
+	void FireTask()
+	{
+		super.Task("Fire");
+		this.value = 0.5;
+	}
+	
+	void FireTask(float value)
+	{
+		super.Task("Fire");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		fire(this.value);
+		this.executed();
+	}
+	
+	public FireTask clone()
+	{
+		return new FireTask(this.value);
+	}
+}
+
+public class GrabTask extends Task
+{
+	int value;
+	
+	void GrabTask(int where)
+	{
+		super.Task("Grab");
+		this.value = where;
+	}
+	
+	public void execute(Robot r)
+	{
+		grab(this.value);
+		this.executed();
+	}
+	
+	public GrabTask clone()
+	{
+		return new GrabTask(this.value);
+	}
+}
+
+public class DropTask extends Task
+{
+	int value;
+	
+	void DropTask(int where)
+	{
+		super.Task("Drop");
+		this.value = where;
+	}
+	
+	public void execute(Robot r)
+	{
+		drop(this.value);
+		this.executed();
+	}
+	
+	public DropTask clone()
+	{
+		return new DropTask(this.value);
+	}
+}    
+
+public class GotoTask extends Task
+{
+	point value;
+	
+	void GotoTask(point value)
+	{
+		super.Task("Goto");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		goto(this.value);
+		this.executed();
+	}
+	
+	public GotoTask clone()
+	{
+		return new GotoTask(this.value);
+	}
+}
+
+public class GotoInterestingTask extends Task
+{
+	void GotoInterestingTask()
+	{
+		super.Task("GotoInteresting");
+	}
+	
+	public void execute(Robot r)
+	{
+		if (!r.hasInteresting()) {
+			this.executed();
+			return;
+		}
+		goto(r.getInteresting().position);
+		this.executed();
+	}
+	
+	public GotoInterestingTask clone()
+	{
+		return new GotoInterestingTask();
+	}
+}
+
+public class FindTask extends Task
+{
+	int value;
+	float angel = 0;
+	float focus = 360;
+	float min = 0;
+	float max = 1000;
+	int sens = 1;
+	
+	void FindTask(int cat)
+	{
+		super.Task("Find");
+		this.value = cat;
+	}
+	
+	
+	void FindTask(int cat, float angel, float focus, float min, float max)
+	{
+		super.Task("Find");
+		this.value = cat;
+		this.angel = angel;
+		this.focus = focus;
+		this.min = min;
+		this.max = max;
+	}
+	
+	void FindTask(int cat, float angel, float focus, float min, float max, int sens)
+	{
+		super.Task("Find");
+		this.value = cat;
+		this.angel = angel;
+		this.focus = focus;
+		this.min = min;
+		this.max = max;
+		this.sens = sens;
+	}
+	
+	public void execute(Robot r)
+	{
+		object o = radar(this.value, this.angel, this.focus, this.min, this.max, this.sens);
+		
+		if (o != null) {
+			r.saveInteresting(o);
+		} else {
+			r.clearInteresting();
+		}
+		this.executed();
+	}
+	
+	public FindTask clone()
+	{
+		return new FindTask(this.value, this.angel, this.focus, this.min, this.max, this.sens);
+	}
+}
+
+public class GrabInterestingTask extends Task
+{
+	void GrabInterestingTask()
+	{
+		super.Task("GrabInteresting");
+	}
+	
+	public void execute(Robot r)
+	{
+		if (!r.hasInteresting()) {
+			this.executed();
+			return;
+		}
+		new GotoTask(r.getInteresting().position).execute(r);
+		new GrabTask(InFront).execute(r);
+		this.executed();
+	}
+	
+	public GrabInterestingTask clone()
+	{
+		return new GrabInterestingTask();
+	}
+}
+
+public class DropInInterestingTask extends Task
+{
+	void DropInInterestingTask()
+	{
+		super.Task("DropInInteresting");
+	}
+	
+	public void execute(Robot r)
+	{
+		if (!r.hasInteresting()) {
+			this.executed();
+			return;
+		}
+		new GotoTask(r.getInteresting().position).execute(r);
+		new DropTask(InFront).execute(r);
+		this.executed();
+	}
+	
+	public DropInInterestingTask clone()
+	{
+		return new DropInInterestingTask();
+	}
+}
+
+public class SavePositionTask extends Task
+{
+	void SavePositionTask()
+	{
+		super.Task("SavePosition");
+	}
+	
+	public void execute(Robot r)
+	{
+		r.savePosition();
+		this.executed();
+	}
+	
+	public SavePositionTask clone()
+	{
+		return new SavePositionTask();
+	}
+}
+
+public class GotoSavePositionTask extends Task
+{
+	void GotoSavePositionTask()
+	{
+		super.Task("GotoSavePosition");
+	}
+	
+	public void execute(Robot r)
+	{
+		new GotoTask(r.getLastSavePosition()).execute(r);
+		this.executed();
+	}
+	
+	public GotoSavePositionTask clone()
+	{
+		return new GotoSavePositionTask();
+	}
+}
+
+public class TurnToInterestingTask extends Task
+{
+	void TurnToInterestingTask()
+	{
+		super.Task("TurnToInterestingn");
+	}
+	
+	public void execute(Robot r)
+	{
+		if (!r.hasInteresting()) {
+			this.executed();
+			return;
+		}
+		new TurnTask(direction(r.getInteresting().position)).execute(r);
+		this.executed();
+	}
+	
+	public TurnToInterestingTask clone()
+	{
+		return new TurnToInterestingTask();
+	}
+}
+
+public class RepeatUntilTask extends Task
+{
+	Specification spec;
+	TaskCollection list;
+	
+	void RepeatUntilTask(TaskCollection list, Specification spec) 
+	{
+		super.Task("RepeatUnit");
+		this.spec = spec;
+		this.list = list;
+	}
+	
+	public void execute(Robot r)
+	{
+		do 
+		{
+			this.runList(this.list.clone(), r);
+		} while (this.spec.isSatisfied(r));
+		this.executed();
+	}
+	 
+	void runList(TaskCollection list, Robot r)
+	{    
+		Task t = list.pull();
+		while(t.getName() != "EmptyTask") 
+		{
+			message(this.getName() + ": " + t.getName());
+			t.execute(r);
+			
+			t = list.pull();
+		} 
+	}
+	
+	public RepeatUntilTask clone()
+	{
+		return new RepeatUntilTask(this.list.clone(), this.spec);
+	}
+}
+
+public class MoveAtInterestingDirectionTask extends Task
+{
+	float value = 1;
+	
+	void MoveAtInterestingDirectionTask(float value)
+	{
+		super.Task("MoveAtInterestingDirection");
+		this.value = value;
+	}
+	
+	void MoveAtInterestingDirectionTask(RobotName r)
+	{
+		super.Task("MoveAtInterestingDirection");
+	}
+	
+	public void execute(Robot r)
+	{
+		if (!r.hasInteresting()) {
+			this.executed();
+			return;
+		}
+		
+		new TurnToInterestingTask().execute(r);
+		new MoveTask(this.value).execute(r);
+		this.executed();
+	}
+	
+	public MoveAtInterestingDirectionTask clone()
+	{
+		return new MoveAtInterestingDirectionTask(this.value);
+	}
+}
+
+public class ResearchTask extends Task
+{
+	int value;
+	
+	void ResearchTask(int value)
+	{
+		super.Task("Research");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		this.research(this.value);
+		this.executed();
+	}
+	
+	bool research(int type)
+	{
+		if (canresearch(type) == false ){
+			return false;
+		}
+		
+		if (researched(type) == true){
+			return false;
+		}
+		
+		object x = radar(ResearchCenter);
+		
+		x.research(type);
+		message("Researching...");
+		return true;
+	}
+	
+	public ResearchTask clone()
+	{
+		return new ResearchTask(this.value);
+	}
+}
+
+public class BuildTask extends Task
+{
+	int value;
+	
+	void BuildTask(int value)
+	{
+		super.Task("Build");
+		this.value = value;
+	}
+	
+	public void execute(Robot r)
+	{
+		build(this.value);
+		this.executed();
+	}
+	
+	public BuildTask clone()
+	{
+		return new BuildTask(this.value);
+	}
+}
+
+public class FactoryTask extends Task
+{
+	int value;
+	string machineName;
+	
+	void FactoryTask(int value, string machineName)
+	{
+		super.Task("Factory");
+		this.value = value;
+		this.machineName = machineName;
+	}
+	
+	public void execute(Robot r)
+	{
+		object x = radar(BotFactory);
+		x.factory(this.value, this.getSlaveCode());
+		this.executed();
+	}
+	
+	string getSlaveCode() 
+	{
+		return "extern void object::slave(){new Slave(new RobotName(\"" + this.machineName +"\"), this).run();}";
+	}
+	
+	public FactoryTask clone()
+	{
+		return new FactoryTask(this.value, this.machineName);
+	}
+}
+
+public class TakeOffTask extends Task
+{
+	void TakeOffTask()
+	{
+		super.Task("TakeOff");
+	}
+	
+	public void execute(Robot r)
+	{
+		object x = radar(SpaceShip);
+		x.takeoff();
+	}
+	
+	public TakeOffTask clone()
+	{
+		return new TakeOffTask();
+	}
+}
+
+public class Specification
+{
+	public bool isSatisfied(Robot r)
+	{
+		message("Specification not implemented");
+		return true;
+	}
+}
+
+public class SomethingInterestingFoundSpecification extends Specification
+{
+	public bool isSatisfied(Robot r)
+	{
+		return r.hasInteresting();
+	}
+}
+
+public class NothingInterestingFoundSpecification extends Specification
+{
+	public bool isSatisfied(Robot r)
+	{
+		return !r.hasInteresting();
+	}
+}
+
+public class CloserToInterestingSpecification extends Specification
+{
+	float value;
+	
+	void CloserToInterestingSpecification(float value)
+	{
+		this.value = value;
+	}
+	
+	public bool isSatisfied(Robot r)
+	{
+		return r.hasInteresting() && 
+		distance(r.getInteresting().position, r.getRobotIntance().position) < this.value;
+	}
+}
+
+public class HaveDistanceToInterestingSpecification extends Specification
+{
+	float value;
+	
+	void HaveDistanceToInterestingSpecification(float value)
+	{
+		this.value = value;
+	}
+	
+	public bool isSatisfied(Robot r)
+	{
+		return r.hasInteresting() && 
+		distance(r.getInteresting().position, r.getRobotIntance().position) >= this.value;
+	}
+}
+
+public class TaskCollection
+{
+	protected Task list[];
+	
+	void TaskCollection()
+	{
+	}
+	
+	void TaskCollection(Task [] list)
+	{
+		this.list = list;
+	}
+	
+	public void append(Task task)
+	{
+		this.list[sizeof(this.list)] = task;
+	}
+	
+	public Task pull()
+	{
+		for (int i = 0; i< sizeof(this.list); i++){
+			if (this.list[i].isExecuted()){
+				continue;
+			}
+			return this.list[i];
+		}
+		return new EmptyTask();
+	}
+	
+	public TaskCollection clone()
+	{
+		TaskCollection newList = new TaskCollection();
+		for (int i = 0; i< sizeof(this.list); i++){
+			newList.append(this.list[i].clone());
+		}
+		
+		return newList;
+	}
+}
+
+public class RobotTaskCollection extends TaskCollection
+{
+	private RobotName r;
+	
+	void RobotTaskCollection(RobotName r)
+	{
+		this.r = r;
+	}
+	
+	public RobotName getAssignedRobotName()
+	{
+		return this.r;
+	}
+	
+	public RobotTaskCollection clone()
+	{
+		RobotTaskCollection newList = new RobotTaskCollection(this.r);
+		for (int i = 0; i< sizeof(this.list); i++){
+			newList.append(this.list[i].clone());
+		}
+		
+		return newList;
+	}
+}
+
+public class Exchange
+{	
+	static private RobotTaskCollection list[];
+	
+	synchronized void push(RobotName robotName, Task task)
+	{
+		if(this.collectionExistsForRobot(robotName)){
+			for(int i=0; i< sizeof(this.list); i++){
+				if (this.list[i].getAssignedRobotName().equals(robotName)) {
+					this.list[i].append(task);
+					return;
+				}
+			}
+		} else {
+			int index = sizeof(this.list);
+			this.list[index] = new RobotTaskCollection(robotName);
+			this.list[index].append(task);
+			return;
+		}
+	}
+
+	public void push(RobotName robotName, Task[] list)
+	{
+		for(int i=0; i< sizeof(list); i++){
+			this.push(robotName, list[i]);
+		}
+	}
+	
+	synchronized Task pull(Robot r)
+	{
+		if (this.collectionExistsForRobot(r.getRobotName())) {
+			for(int i=0; i< sizeof(this.list); i++){
+				if (this.list[i].getAssignedRobotName().equals(r.getRobotName())) {
+					return this.list[i].pull();
+				}
+			}
+		}
+		return new EmptyTask();
+	}
+	
+	bool collectionExistsForRobot(RobotName r)
+	{
+		for(int i=0; i< sizeof(this.list); i++){
+			if (this.list[i].getAssignedRobotName().equals(r)) {
+				return true;
+			}
+		}
+		return false;
+	}
+}

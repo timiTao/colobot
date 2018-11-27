@@ -1,0 +1,25 @@
+extern void object::slave()
+{
+	Exchange e = new Exchange();
+	RobotName r = new RobotName("slave");
+	
+	TaskCollection generalList = new TaskCollection(r);
+	
+	TaskCollection listToFollow = new TaskCollection(r);
+	listToFollow.append(new FindTask(AlienSpider, 0, 360, 30, 100));
+	listToFollow.append(new MoveAtInterestingDirectionTask(3));
+	generalList.append(new RepeatUntilTask(listToFollow, new HaveDistanceToInterestingSpecification(35)));
+	
+	TaskCollection listToAttack = new TaskCollection(r);
+	listToAttack.append(new FindTask(AlienSpider, 0, 45, 0, 38));
+	listToAttack.append(new TurnToInterestingTask());
+	listToAttack.append(new FireTask(r,0.5));
+	listToAttack.append(new WaitTask(r,0.5));
+	
+	generalList.append(new RepeatUntilTask(listToAttack, new CloserToInterestingSpecification(35)));
+	generalList.append(new FindTask(AlienSpider, 0, 360, 33, 1000));
+	
+	e.push(r, new RepeatUntilTask(generalList, new SomethingInterestingFoundSpecification()));
+	
+	new Slave("slave", this).run();
+}

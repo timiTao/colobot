@@ -1,0 +1,12 @@
+extern void object::slave()
+{
+	Exchange e = new Exchange();
+	RobotName r = new RobotName("slave");
+	
+	e.push(r, new FindTask(Titanium));
+	e.push(r, new GrabInterestingTask());
+	point a (10, -60, 0);
+	e.push(r, new GotoTask(a));
+	
+	new Slave("slave", this).run();
+}

@@ -1,0 +1,41 @@
+extern void object::slave()
+{
+	Exchange x = new Exchange();
+	RobotName r = new RobotName("slave1");
+	
+	x.push(r, new FindTask(PowerCell));
+	x.push(r, new GrabInterestingTask());
+	x.push(r, new FindTask(ResearchCenter));
+	x.push(r, new DropInInterestingTask());
+	x.push(r, new ResearchTask(ResearchTracked));
+	
+	x.push(r, new FindTask(Titanium));
+	x.push(r, new GrabInterestingTask());
+	x.push(r, new FindTask(BotFactory));
+	x.push(r, new DropInInterestingTask());
+	x.push(r, new MoveTask(-3));
+	x.push(r, new FactoryTask(TrackedGrabber, "slave2"));
+	
+	x.push(r, new FindTask(PowerCell));
+	x.push(r, new GrabInterestingTask());
+	
+	Task [] list1 = {new FindTask(TrackedGrabber)};
+	x.push(r, new RepeatUntilTask(
+	    new TaskCollection(list1), 
+	    new NothingInterestingFoundSpecification()
+	    )
+	);
+	
+	x.push(r, new DropInInterestingTask());
+	
+	x.push(r, new FindTask(SpaceShip));
+	x.push(r, new GotoInterestingTask());
+	
+	RobotName r2 = new RobotName("slave2");
+
+	Task [] list2 = {new FindTask(BlackBox), new GrabInterestingTask(), new FindTask(SpaceShip), new GotoInterestingTask()};
+	x.push(r2, list2);
+	x.push(r2, new TakeOffTask());
+	
+	new Slave(r, this).run();
+}

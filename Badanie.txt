@@ -1,0 +1,62 @@
+extern void object::Nowy()
+{
+	object powerCell = radar(PowerCell);
+	goto(powerCell.position);
+	grab();
+	
+	object rl = radar(ResearchCenter);
+	goto(rl.position);
+	drop();
+	Badanie x = new Badanie(rl);
+	x.run();
+}
+
+public class Badanie
+{
+	object x;
+	int list[] = {
+		ResearchTracked,
+		ResearchWinged,
+		ResearchShooter,
+		ResearchPhazerShooter,
+		ResearchThumper,
+		ResearchShielder,
+		ResearchDefenseTower,
+		ResearchNuclearPlant,
+		ResearchLegged,
+		ResearchOrgaShooter,
+		ResearchSniffer,
+		ResearchSubber,       
+		ResearchRecycler    
+	};
+	
+	public void Badanie(object researchLab)
+	{
+		this.x = researchLab;
+	}
+	
+	public void run()
+	{
+		for(int i = 0; i<sizeof(this.list); i++) {
+			if(this.research(this.list[i])){
+				return;
+			}
+		}
+		message("Nothing to research...");
+	}
+	
+	bool research(int type)
+	{
+		if (canresearch(type) == false ){
+			return false;
+		}
+		
+		if (researched(type) == true){
+			return false;
+		}
+		this.x.research(type);
+		message("Researching...");
+		return true;
+	}
+	
+}
